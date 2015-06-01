@@ -2,6 +2,7 @@ package com.mmbuw.mis.internetofthings;
 
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -14,12 +15,17 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Set;
+
 /*
  Main activity that shows the list of Bluetooth Low Energy devices in radio range
  */
 public class ShowBTLEActivity extends ListActivity {
 
     private BluetoothAdapter bluetoothAdapter;
+    private ListView devicesList;
+    private boolean scanning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +44,14 @@ public class ShowBTLEActivity extends ListActivity {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
-        // the device doesn't support Bluetooth
+        // Checks if the device doesn't support Bluetooth
         if (bluetoothAdapter == null) {
             Toast.makeText(this, R.string.bt_not_supported, Toast.LENGTH_LONG).show();
             // finish();
         }
+
+        // Set devices list
+        devicesList = getListView();
     }
 
 
@@ -79,7 +88,39 @@ public class ShowBTLEActivity extends ListActivity {
         startActivity(deviceIntent);
     }
 
+    /*
+     Starts looking for other BTLE devices, as a client
+     */
     public void startScan(View view) {
         Toast.makeText(this, "Starting to scan!", Toast.LENGTH_LONG).show();
+
+        scanning = true;
+        //bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
+
+        // bluetoothAdapter.startDiscovery(); // asynchronous call...
+
+        // Coursera bluetooth example
+        // It seems to refer only to devices already paired... try this!
+        // if not, try using startLeScan
+        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices(); // it will crash if there's no bluetooth
+        ArrayList<String> bondedDeviceStrings = new ArrayList<String>();
+        if (bondedDevices.size() > 0) {
+            for (BluetoothDevice device : bondedDevices) {
+                bondedDeviceStrings.add(device.getName() + "\n" + device.getAddress());
+            }
+        }
+
+        // The button should be unabled for some time, while the search is being done
+        // Probably, enable it again when time is up
+        // (coursera code example)
     }
+
+    // Callback to indicate actions on BTLE devices scanning
+    // Created to use with startLeScan(leScanCallback), which is deprecated =/
+    private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            // do something with device - maybe on a thread?
+        }
+    };
 }
