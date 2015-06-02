@@ -36,6 +36,38 @@ public class ShowBTLEActivity extends ListActivity {
     private  static final long SCAN_PERIOD = 10000;
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mReceiver, filter);
+        if (scanning){
+            bluetoothAdapter.startLeScan(leScanCallback); //why use leScanCallback??
+
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
+        if (scanning){
+            bluetoothAdapter.stopLeScan(leScanCallback); //why use leScanCallback??
+
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+        if (scanning){
+            bluetoothAdapter.stopLeScan(leScanCallback); //why use leScanCallback??
+            scanning = false;
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_btle);
@@ -103,6 +135,7 @@ public class ShowBTLEActivity extends ListActivity {
         startActivity(deviceIntent);
     }
 
+    //used with normal bluetooth
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -140,6 +173,10 @@ public class ShowBTLEActivity extends ListActivity {
 
 
     }
+  /*  public void stopScan (){
+
+    }*/
+
 
     // Callback to indicate actions on BTLE devices scanning
     // Created to use with startLeScan(leScanCallback), which is deprecated =/
