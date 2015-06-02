@@ -1,12 +1,13 @@
 package com.mmbuw.mis.internetofthings;
 
+import android.app.Activity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class DeviceActivity extends ActionBarActivity {
+public class DeviceActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
