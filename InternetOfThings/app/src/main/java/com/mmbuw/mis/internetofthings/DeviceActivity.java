@@ -9,6 +9,9 @@ import android.view.MenuItem;
 
 public class DeviceActivity extends Activity {
 
+    public  static  final  String DEVICE_NAME = "";
+    public  static  final  String DEVICE_ADDRESS= "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

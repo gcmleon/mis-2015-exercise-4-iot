@@ -20,7 +20,9 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.TimerTask;
 import java.util.logging.Handler;
+import java.util.Timer;
 import java.util.logging.LogRecord;
 
 /*
@@ -33,7 +35,7 @@ public class ShowBTLEActivity extends ListActivity {
     private boolean scanning = false;
     private Handler handler;
     ArrayAdapter<String> mArrayAdapter = null;
-    private  static final long SCAN_PERIOD = 10000;
+    private  static final long SCAN_PERIOD = 100;
 
     @Override
     protected void onResume() {
@@ -62,7 +64,7 @@ public class ShowBTLEActivity extends ListActivity {
         super.onDestroy();
         unregisterReceiver(mReceiver);
         if (scanning){
-            bluetoothAdapter.stopLeScan(leScanCallback); //why use leScanCallback??
+            bluetoothAdapter.stopLeScan(leScanCallback);
             scanning = false;
         }
     }
@@ -130,8 +132,10 @@ public class ShowBTLEActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-
+       // BluetoothDevice selectedDevice =
+                //passing name, address to next activity
         Intent deviceIntent = new Intent(this, DeviceActivity.class);
+      //  deviceIntent.putExtra(DeviceActivity.DEVICE_NAME, .. )
         startActivity(deviceIntent);
     }
 
@@ -155,10 +159,27 @@ public class ShowBTLEActivity extends ListActivity {
      Starts looking for other BTLE devices, as a client
      */
     public void startScan(View view) {
-        Toast.makeText(this, "Starting to scan!", Toast.LENGTH_LONG).show();
 
-        scanning = true;
-        bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
+
+        Timer timer = new Timer();
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                scanning = true;
+                Toast.makeText(getApplicationContext(), "Starting to scan!", Toast.LENGTH_LONG).show();
+                bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
+
+            }
+        }, SCAN_PERIOD);
+
+       // if (timer == SCAN_PERIOD){
+            scanning = false;
+            bluetoothAdapter.stopLeScan(leScanCallback);
+            Toast.makeText(this, "Time out! Stop Scanning!", Toast.LENGTH_LONG).show();
+            System.out.print("BuuuuBU");
+
+        //}
 
          //bluetoothAdapter.startDiscovery(); // asynchronous call...
 
