@@ -35,7 +35,7 @@ public class ShowBTLEActivity extends ListActivity {
     private boolean scanning = false;
     private Handler handler;
     ArrayAdapter<String> mArrayAdapter = null;
-    private  static final long SCAN_PERIOD = 100;
+    private  static final long SCAN_PERIOD = 500;
 
     @Override
     protected void onResume() {
@@ -158,30 +158,39 @@ public class ShowBTLEActivity extends ListActivity {
     /*
      Starts looking for other BTLE devices, as a client
      */
-    public void startScan(View view) {
+    public void startScan(final View view) {
+        scanning = true;
+        Toast.makeText(this, "Starting to scan!", Toast.LENGTH_LONG).show();
+        bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
+
+       final Timer timer = new Timer();
+       // runOnUiThread(new Runnable() {
+         //   public void run() {
+                timer.schedule(new TimerTask() {
+                    @Override
+
+                    public void run() {
+                        // http://developer.android.com/guide/components/processes-and-threads.html
+                        // undate UI thread after timeout finished on worker thread
+                        
+                        view.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                scanning = false;
+                                System.out.print("Stop Scanning!");
+                                Toast.makeText(getApplicationContext(), "Time out! Stop Scanning!", Toast.LENGTH_LONG).show();
+                                bluetoothAdapter.stopLeScan(leScanCallback);
+                            }
+                        });
+
+                    }
+                }, SCAN_PERIOD);
+
+          //  }
+      //  });
 
 
-        Timer timer = new Timer();
-
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                scanning = true;
-                Toast.makeText(getApplicationContext(), "Starting to scan!", Toast.LENGTH_LONG).show();
-                bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
-
-            }
-        }, SCAN_PERIOD);
-
-       // if (timer == SCAN_PERIOD){
-            scanning = false;
-            bluetoothAdapter.stopLeScan(leScanCallback);
-            Toast.makeText(this, "Time out! Stop Scanning!", Toast.LENGTH_LONG).show();
-            System.out.print("BuuuuBU");
-
-        //}
-
-         //bluetoothAdapter.startDiscovery(); // asynchronous call...
+        //bluetoothAdapter.startDiscovery(); // asynchronous call...
 
         // Coursera bluetooth example
         // It seems to refer only to devices already paired... try this!
@@ -204,7 +213,7 @@ public class ShowBTLEActivity extends ListActivity {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-        Toast.makeText(getApplicationContext(), "Device Address:" + device.getAddress(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Device Address:" + device.getAddress(), Toast.LENGTH_LONG).show();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
