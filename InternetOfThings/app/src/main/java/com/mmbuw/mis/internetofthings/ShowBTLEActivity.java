@@ -35,7 +35,7 @@ public class ShowBTLEActivity extends ListActivity {
     private boolean scanning = false;
     private Handler handler;
     ArrayAdapter<String> mArrayAdapter = null;
-    private  static final long SCAN_PERIOD = 500;
+    private  static final long SCAN_PERIOD = 50000;
 
     @Override
     protected void onResume() {
@@ -161,6 +161,8 @@ public class ShowBTLEActivity extends ListActivity {
     public void startScan(final View view) {
         scanning = true;
         Toast.makeText(this, "Starting to scan!", Toast.LENGTH_LONG).show();
+        mArrayAdapter.clear(); //remove previous scan results
+
         bluetoothAdapter.startLeScan(leScanCallback); // deprecated for later versions than ours :(
 
        final Timer timer = new Timer();
@@ -172,7 +174,7 @@ public class ShowBTLEActivity extends ListActivity {
                     public void run() {
                         // http://developer.android.com/guide/components/processes-and-threads.html
                         // undate UI thread after timeout finished on worker thread
-                        
+
                         view.post(new Runnable() {
                             @Override
                             public void run() {
@@ -185,9 +187,6 @@ public class ShowBTLEActivity extends ListActivity {
 
                     }
                 }, SCAN_PERIOD);
-
-          //  }
-      //  });
 
 
         //bluetoothAdapter.startDiscovery(); // asynchronous call...
