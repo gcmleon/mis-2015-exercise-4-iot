@@ -9,9 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Looper;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,8 +21,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.logging.Handler;
 import java.util.Timer;
+import java.util.logging.LogRecord;
 
 /*
  Main activity that shows the list of Bluetooth Low Energy devices in radio range
@@ -33,7 +32,7 @@ public class ShowBTLEActivity extends ListActivity {
     private BluetoothAdapter bluetoothAdapter;
     private ListView devicesList;
     private boolean scanning = false;
-    // private Handler handler;
+    private Handler mHandler;
     private ArrayAdapter<String> mArrayAdapter;
     private ArrayList<BluetoothDevice> leDevices;
     private static final long SCAN_PERIOD = 50000;
@@ -42,12 +41,13 @@ public class ShowBTLEActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_btle);
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
+        //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        //registerReceiver(mReceiver, filter);
         // Set devices list
         devicesList = getListView();
         mArrayAdapter = new ArrayAdapter<String>(this, R.layout.list_item);
         leDevices = new ArrayList<BluetoothDevice>();
+        mHandler = new Handler();
 
         // Check if device is a BTLE-capable one
         // https://developer.android.com/guide/topics/connectivity/bluetooth-le.html
@@ -61,24 +61,31 @@ public class ShowBTLEActivity extends ListActivity {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
-        // Checks if the device doesn't support Bluetooth
+        // Checks if the device doesn't support Bluetooth or it's not enabled
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Toast.makeText(this, R.string.bt_not_supported, Toast.LENGTH_LONG).show();
-            // finish();
+            // It asks the user to enable bluetooth
+            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivity(enableBluetooth);
+            finish();
+            return;
         }
 
-        bluetoothAdapter.getDefaultAdapter();
+        // bluetoothAdapter.getDefaultAdapter();
         setListAdapter(mArrayAdapter);
     }
 
-
+    /*
+    NOT SURE ABOUT THIS CODE!
+    Check Android example...
+     */
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
+        // IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        //registerReceiver(mReceiver, filter);
         if (scanning){
-            bluetoothAdapter.startLeScan(leScanCallback);
+            beginScan();
         }
 
     }
@@ -86,19 +93,20 @@ public class ShowBTLEActivity extends ListActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mReceiver);
+        //unregisterReceiver(mReceiver);
         if (scanning){
-            bluetoothAdapter.stopLeScan(leScanCallback);
+            stopScan();
+            mArrayAdapter.clear(); //remove previous scan results
+            leDevices.clear();
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mReceiver);
+        //unregisterReceiver(mReceiver);
         if (scanning){
-            bluetoothAdapter.stopLeScan(leScanCallback);
-            scanning = false;
+            stopScan();
         }
     }
 
@@ -135,11 +143,17 @@ public class ShowBTLEActivity extends ListActivity {
         Intent deviceIntent = new Intent(this, DeviceActivity.class);
         deviceIntent.putExtra(DeviceActivity.DEVICE_NAME, selectedDevice.getName());
         deviceIntent.putExtra(DeviceActivity.DEVICE_ADDRESS, selectedDevice.getAddress());
+
+        if (scanning) {
+            stopScan();
+        }
+
         startActivity(deviceIntent);
     }
 
     //used with normal bluetooth
 
+    /*
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -156,16 +170,14 @@ public class ShowBTLEActivity extends ListActivity {
                 System.out.print("^^");
             }
         }
-    };
+    };*/
 
     // Starts looking for other BTLE devices, as a client
     public void startScan(final View view) {
-        scanning = true;
-        mArrayAdapter.clear(); //remove previous scan results
-        leDevices.clear();
 
-        Toast.makeText(this, "Before starting to scan!", Toast.LENGTH_LONG).show();
+        beginScan();
 
+        /*
        final Timer timer = new Timer();
         runOnUiThread(new Runnable() {
                           public void run() {
@@ -194,14 +206,40 @@ public class ShowBTLEActivity extends ListActivity {
                                   }
                               }, SCAN_PERIOD);
                           }
-                      });
+                      });*/
 
-        // The button should be unabled for some time, while the search is being done
-        // Probably, enable it again when time is up
+    }
 
+    private void beginScan () {
+
+        mArrayAdapter.clear(); //remove previous scan results
+        leDevices.clear();
+
+        Toast.makeText(this, "Before starting to scan", Toast.LENGTH_LONG).show();
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                stopScan();
+                Toast.makeText(getApplicationContext(), "Scanning stopped", Toast.LENGTH_LONG).show();
+            }
+        }, SCAN_PERIOD);
+
+
+        /* Other options:
+        The button could be disabled for some time, while the search is being done
+        Probably, enable it again when time is up
+         */
+
+        Toast.makeText(this, "Starting to scan", Toast.LENGTH_LONG).show();
+        scanning = true;
         bluetoothAdapter.startLeScan(leScanCallback);
 
-        Toast.makeText(this, "Starting to scan!", Toast.LENGTH_LONG).show();
+    }
+
+    private void stopScan () {
+        scanning = false;
+        bluetoothAdapter.stopLeScan(leScanCallback);
     }
 
     // Callback to indicate actions on BTLE devices scanning
@@ -215,19 +253,14 @@ public class ShowBTLEActivity extends ListActivity {
                 @Override
                 public void run() {
 
-                    Looper.prepare();
-
-                    bluetoothAdapter.getDefaultAdapter();
+                    // bluetoothAdapter.getDefaultAdapter();
 
                     System.out.print("Thread" + device.getName() + "\n" + device.getAddress());
                     Toast.makeText(getApplicationContext(), "BTLE: Device Name:" + device.getName(), Toast.LENGTH_LONG).show();
+
                     mArrayAdapter.add(device.getName() + device.getAddress());
                     leDevices.add(device);
                     mArrayAdapter.notifyDataSetChanged();
-
-                    Looper.loop();
-
-                    Looper.myLooper().quit();
 
                 }
             });
