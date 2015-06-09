@@ -5,7 +5,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -25,6 +27,12 @@
             android:name=".DeviceActivity"
             android:label="@string/title_activity_device" >
         </activity>
+
+        <service
+            android:name=".GATTConnection"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>

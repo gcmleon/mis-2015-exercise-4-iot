@@ -9,9 +9,18 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Large Text"
+        android:id="@+id/deviceName"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Medium Text"
-        android:id="@+id/deviceName"
+        android:id="@+id/broadcast"
+        android:layout_below="@+id/deviceName"
         android:layout_centerHorizontal="true" />
 
     <Button
@@ -20,6 +29,8 @@
         android:text="Connect to GATT Server"
         android:id="@+id/connectButton"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:onClick="startGATTConnection"/>
+
 
 </RelativeLayout>

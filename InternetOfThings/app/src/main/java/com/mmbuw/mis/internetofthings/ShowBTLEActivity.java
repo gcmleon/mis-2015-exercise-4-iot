@@ -36,6 +36,8 @@ public class ShowBTLEActivity extends ListActivity {
     private ArrayAdapter<String> mArrayAdapter;
     private ArrayList<BluetoothDevice> leDevices;
     private static final long SCAN_PERIOD = 50000;
+    private byte[] broadcastedData;
+    private int deviceRSSI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,9 +142,16 @@ public class ShowBTLEActivity extends ListActivity {
         super.onListItemClick(l, v, position, id);
         // passing name, address to next activity
         BluetoothDevice selectedDevice = leDevices.get(position);
+
+        if (selectedDevice == null) {
+            return;
+        }
+
         Intent deviceIntent = new Intent(this, DeviceActivity.class);
         deviceIntent.putExtra(DeviceActivity.DEVICE_NAME, selectedDevice.getName());
         deviceIntent.putExtra(DeviceActivity.DEVICE_ADDRESS, selectedDevice.getAddress());
+        deviceIntent.putExtra(DeviceActivity.DEVICE_RECORD, broadcastedData);
+        deviceIntent.putExtra(DeviceActivity.DEVICE_RSSI, deviceRSSI);
 
         if (scanning) {
             stopScan();
@@ -247,7 +256,7 @@ public class ShowBTLEActivity extends ListActivity {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
 
         @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+        public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             Toast.makeText(getApplicationContext(), "Device Address:" + device.getAddress(), Toast.LENGTH_LONG).show();
             runOnUiThread(new Runnable() {
                 @Override
@@ -261,6 +270,9 @@ public class ShowBTLEActivity extends ListActivity {
                     mArrayAdapter.add(device.getName() + device.getAddress());
                     leDevices.add(device);
                     mArrayAdapter.notifyDataSetChanged();
+
+                    broadcastedData = scanRecord;
+                    deviceRSSI = rssi;
 
                 }
             });

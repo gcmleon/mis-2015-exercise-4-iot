@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">InternetOfThings</string>
 
-    <string name="show_devices">This activity shows the BTLE-enabled devices</string>
+    <string name="show_devices">Internet of Things: Bluetooth Low Energy</string>
     <string name="device_info">This activity shows the information of chosen devices</string>
     <string name="btle_not_supported">Unfortunately, this device doesn\'t support BTLE</string>
     <string name="bt_not_supported">Unfortunately, this device doesn\'t support Bluetooth</string>
