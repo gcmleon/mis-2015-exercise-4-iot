@@ -43,8 +43,6 @@ public class ShowBTLEActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_btle);
-        //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        //registerReceiver(mReceiver, filter);
         // Set devices list
         devicesList = getListView();
         mArrayAdapter = new ArrayAdapter<String>(this, R.layout.list_item);
@@ -73,19 +71,12 @@ public class ShowBTLEActivity extends ListActivity {
             return;
         }
 
-        // bluetoothAdapter.getDefaultAdapter();
         setListAdapter(mArrayAdapter);
     }
 
-    /*
-    NOT SURE ABOUT THIS CODE!
-    Check Android example...
-     */
     @Override
     protected void onResume() {
         super.onResume();
-        // IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        //registerReceiver(mReceiver, filter);
         if (scanning){
             beginScan();
         }
@@ -95,7 +86,6 @@ public class ShowBTLEActivity extends ListActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        //unregisterReceiver(mReceiver);
         if (scanning){
             stopScan();
             mArrayAdapter.clear(); //remove previous scan results
@@ -106,7 +96,6 @@ public class ShowBTLEActivity extends ListActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //unregisterReceiver(mReceiver);
         if (scanning){
             stopScan();
         }
@@ -160,62 +149,11 @@ public class ShowBTLEActivity extends ListActivity {
         startActivity(deviceIntent);
     }
 
-    //used with normal bluetooth
-
-    /*
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                Toast.makeText(getApplicationContext(), "CLASSIC: Name or Address" + device.getName()
-                               + "\n" + device.getAddress(), Toast.LENGTH_LONG).show();
-                leDevices.add(device);
-
-                System.out.print("^^");
-            }
-        }
-    };*/
 
     // Starts looking for other BTLE devices, as a client
     public void startScan(final View view) {
 
         beginScan();
-
-        /*
-       final Timer timer = new Timer();
-        runOnUiThread(new Runnable() {
-                          public void run() {
-                              timer.schedule(new TimerTask() {
-                                  @Override
-
-                                  public void run() {
-
-                                      Looper.prepare();
-                                      // http://developer.android.com/guide/components/processes-and-threads.html
-                                      // update UI thread after timeout finished on worker thread
-                                      bluetoothAdapter.getDefaultAdapter();
-
-                                      view.post(new Runnable() {
-                                          @Override
-                                          public void run() {
-                                              scanning = false;
-                                              System.out.print("Stop Scanning!");
-                                              Toast.makeText(getApplicationContext(), "Time out! Stop Scanning!", Toast.LENGTH_LONG).show();
-                                              bluetoothAdapter.stopLeScan(leScanCallback);
-                                          }
-                                      });
-
-                                      Looper.loop();
-
-                                  }
-                              }, SCAN_PERIOD);
-                          }
-                      });*/
 
     }
 
@@ -224,23 +162,18 @@ public class ShowBTLEActivity extends ListActivity {
         mArrayAdapter.clear(); //remove previous scan results
         leDevices.clear();
 
-        Toast.makeText(this, "Before starting to scan", Toast.LENGTH_LONG).show();
+        // Toast.makeText(this, "Before starting to scan", Toast.LENGTH_LONG).show();
 
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 stopScan();
-                Toast.makeText(getApplicationContext(), "Scanning stopped", Toast.LENGTH_LONG).show();
+                // Toast.makeText(getApplicationContext(), "Scanning stopped", Toast.LENGTH_LONG).show();
             }
         }, SCAN_PERIOD);
 
 
-        /* Other options:
-        The button could be disabled for some time, while the search is being done
-        Probably, enable it again when time is up
-         */
-
-        Toast.makeText(this, "Starting to scan", Toast.LENGTH_LONG).show();
+        // Toast.makeText(this, "Starting to scan", Toast.LENGTH_LONG).show();
         scanning = true;
         bluetoothAdapter.startLeScan(leScanCallback);
 
@@ -257,17 +190,29 @@ public class ShowBTLEActivity extends ListActivity {
 
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            Toast.makeText(getApplicationContext(), "Device Address:" + device.getAddress(), Toast.LENGTH_LONG).show();
+            // Toast.makeText(getApplicationContext(), "Device Address:" + device.getAddress(), Toast.LENGTH_LONG).show();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
 
-                    // bluetoothAdapter.getDefaultAdapter();
 
                     System.out.print("Thread" + device.getName() + "\n" + device.getAddress());
-                    Toast.makeText(getApplicationContext(), "BTLE: Device Name:" + device.getName(), Toast.LENGTH_LONG).show();
+                    // Toast.makeText(getApplicationContext(), "BTLE: Device Name:" + device.getName(), Toast.LENGTH_LONG).show();
 
-                    mArrayAdapter.add(device.getName() + device.getAddress());
+                    String nameObtained = device.getName();
+
+                    if (nameObtained == null) {
+                        mArrayAdapter.add(device.getAddress());
+                    } else {
+                        if (nameObtained.length() == 0) {
+                            mArrayAdapter.add(device.getAddress());
+                        } else {
+                            mArrayAdapter.add(nameObtained);
+                        }
+                    }
+
+                    //mArrayAdapter.add(device.getName() + device.getAddress());
+
                     leDevices.add(device);
                     mArrayAdapter.notifyDataSetChanged();
 
@@ -276,7 +221,6 @@ public class ShowBTLEActivity extends ListActivity {
 
                 }
             });
-            // do something with device - maybe on a thread?
         }
     };
 }
